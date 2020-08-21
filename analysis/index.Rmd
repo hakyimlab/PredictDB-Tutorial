@@ -8,4 +8,6 @@ editor_options:
   chunk_output_type: console
 ---
 
-Welcome to my research website.
+Welcome to PredictDB tutorial.
+
+* [PredictDB Tutorial](PredictDB-Tutorial.Rmd)
