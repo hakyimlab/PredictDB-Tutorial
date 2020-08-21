@@ -10,4 +10,4 @@ editor_options:
 
 Welcome to PredictDB tutorial.
 
-* [PredictDB Tutorial](PredictDB-Tutorial.Rmd)
+* [PredictDB Tutorial](PredictDB-Tutorial.html)
