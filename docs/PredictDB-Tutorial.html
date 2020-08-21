@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+<meta name="author" content="Tyson Miller" />
+
+
+<title>PredictDB-Tutorial</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/cosmo.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<link rel="icon" href="https://github.com/workflowr/workflowr-assets/raw/master/img/reproducible.png">
+<!-- Add a small amount of space between sections. -->
+<style type="text/css">
+div.section {
+  padding-top: 12px;
+}
+</style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">PredictDB-Tutorial</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+<li>
+  <a href="license.html">License</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="https://github.com/hakyimlab/PredictDB-Tutorial">
+    <span class="fa fa-github"></span>
+     
+    Source code
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+
+
+<h1 class="title toc-ignore">PredictDB-Tutorial</h1>
+<h4 class="author">Tyson Miller</h4>
+<h4 class="date">8/21/2020</h4>
+
+</div>
+
+
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-report" data-toggle="collapse" data-target="#workflowr-report">
+<span class="glyphicon glyphicon-list" aria-hidden="true"></span> workflowr <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span>
+</button>
+</p>
+<div id="workflowr-report" class="collapse">
+<ul class="nav nav-tabs">
+<li class="active">
+<a data-toggle="tab" href="#summary">Summary</a>
+</li>
+<li>
+<a data-toggle="tab" href="#checks"> Checks <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> </a>
+</li>
+<li>
+<a data-toggle="tab" href="#versions">Past versions</a>
+</li>
+</ul>
+<div class="tab-content">
+<div id="summary" class="tab-pane fade in active">
+<p>
+<strong>Last updated:</strong> 2020-08-21
+</p>
+<p>
+<strong>Checks:</strong> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> 6 <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> 1
+</p>
+<p>
+<strong>Knit directory:</strong> <code>PredictDB-Tutorial/analysis/</code> <span class="glyphicon glyphicon-question-sign" aria-hidden="true" title="This is the local directory in which the code in this file was executed."> </span>
+</p>
+<p>
+This reproducible <a href="http://rmarkdown.rstudio.com">R Markdown</a> analysis was created with <a
+  href="https://github.com/jdblischak/workflowr">workflowr</a> (version 1.6.2). The <em>Checks</em> tab describes the reproducibility checks that were applied when the results were created. The <em>Past versions</em> tab lists the development history.
+</p>
+<hr>
+</div>
+<div id="checks" class="tab-pane fade">
+<div id="workflowr-checks" class="panel-group">
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRMarkdownfilestronguncommittedchanges"> <span class="glyphicon glyphicon-exclamation-sign text-danger" aria-hidden="true"></span> <strong>R Markdown file:</strong> uncommitted changes </a>
+</p>
+</div>
+<div id="strongRMarkdownfilestronguncommittedchanges" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The R Markdown is untracked by Git. To know which version of the R Markdown file created these results, you’ll want to first commit it to the Git repo. If you’re still working on the analysis, you can ignore this warning. When you’re finished, you can run <code>wflow_publish</code> to commit the R Markdown file and build the HTML.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongEnvironmentstrongempty"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Environment:</strong> empty </a>
+</p>
+</div>
+<div id="strongEnvironmentstrongempty" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! The global environment was empty. Objects defined in the global environment can affect the analysis in your R Markdown file in unknown ways. For reproduciblity it’s best to always run the code in an empty environment.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSeedstrongcodesetseed20200724code"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Seed:</strong> <code>set.seed(20200724)</code> </a>
+</p>
+</div>
+<div id="strongSeedstrongcodesetseed20200724code" class="panel-collapse collapse">
+<div class="panel-body">
+<p>The command <code>set.seed(20200724)</code> was run prior to running the code in the R Markdown file. Setting a seed ensures that any results that rely on randomness, e.g. subsampling or permutations, are reproducible.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongSessioninformationstrongrecorded"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Session information:</strong> recorded </a>
+</p>
+</div>
+<div id="strongSessioninformationstrongrecorded" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Recording the operating system, R version, and package versions is critical for reproducibility.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongCachestrongnone"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Cache:</strong> none </a>
+</p>
+</div>
+<div id="strongCachestrongnone" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Nice! There were no cached chunks for this analysis, so you can be confident that you successfully produced the results during this run.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongFilepathsstrongrelative"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>File paths:</strong> relative </a>
+</p>
+</div>
+<div id="strongFilepathsstrongrelative" class="panel-collapse collapse">
+<div class="panel-body">
+<p>Great job! Using relative paths to the files within your workflowr project makes it easier to run your code on other machines.</p>
+</div>
+</div>
+</div>
+<div class="panel panel-default">
+<div class="panel-heading">
+<p class="panel-title">
+<a data-toggle="collapse" data-parent="#workflowr-checks" href="#strongRepositoryversionstrongahrefhttpsgithubcomFnyasimiPredictDBTutorialtree824c3af7c597a5dbfec8cd81ed111a2afd20282btargetblank824c3afa"> <span class="glyphicon glyphicon-ok text-success" aria-hidden="true"></span> <strong>Repository version:</strong> <a href="https://github.com/Fnyasimi/PredictDB-Tutorial/tree/824c3af7c597a5dbfec8cd81ed111a2afd20282b" target="_blank">824c3af</a> </a>
+</p>
+</div>
+<div id="strongRepositoryversionstrongahrefhttpsgithubcomFnyasimiPredictDBTutorialtree824c3af7c597a5dbfec8cd81ed111a2afd20282btargetblank824c3afa" class="panel-collapse collapse">
+<div class="panel-body">
+<p>
+Great! You are using Git for version control. Tracking code development and connecting the code version to the results is critical for reproducibility.
+</p>
+<p>
+The results in this page were generated with repository version <a href="https://github.com/Fnyasimi/PredictDB-Tutorial/tree/824c3af7c597a5dbfec8cd81ed111a2afd20282b" target="_blank">824c3af</a>. See the <em>Past versions</em> tab to see a history of the changes made to the R Markdown and HTML files.
+</p>
+<p>
+Note that you need to be careful to ensure that all relevant files for the analysis have been committed to Git prior to generating the results (you can use <code>wflow_publish</code> or <code>wflow_git_commit</code>). workflowr only checks the R Markdown file, but you know if there are other scripts or data files that it depends on. Below is the status of the Git repository when the results were generated:
+</p>
+<pre><code>
+Untracked files:
+    Untracked:  PredictDB-Tutorial.Rproj
+    Untracked:  analysis/PredictDB-Tutorial.Rmd
+    Untracked:  code/gtex_tiss_chrom_training.R
+    Untracked:  code/gtex_v7_nested_cv_elnet.R
+    Untracked:  code/parse_gtf.py
+    Untracked:  code/split_genotype_by_chr.py
+    Untracked:  code/split_snp_annot_by_chr.py
+    Untracked:  covariances/
+    Untracked:  data/
+    Untracked:  dbs/
+    Untracked:  output/covariates.txt
+    Untracked:  output/gene_annot.parsed.txt
+    Untracked:  output/gene_exp.csv
+    Untracked:  output/genotype.chr1.txt
+    Untracked:  output/genotype.chr10.txt
+    Untracked:  output/genotype.chr11.txt
+    Untracked:  output/genotype.chr12.txt
+    Untracked:  output/genotype.chr13.txt
+    Untracked:  output/genotype.chr14.txt
+    Untracked:  output/genotype.chr15.txt
+    Untracked:  output/genotype.chr16.txt
+    Untracked:  output/genotype.chr17.txt
+    Untracked:  output/genotype.chr18.txt
+    Untracked:  output/genotype.chr19.txt
+    Untracked:  output/genotype.chr2.txt
+    Untracked:  output/genotype.chr20.txt
+    Untracked:  output/genotype.chr21.txt
+    Untracked:  output/genotype.chr22.txt
+    Untracked:  output/genotype.chr3.txt
+    Untracked:  output/genotype.chr4.txt
+    Untracked:  output/genotype.chr5.txt
+    Untracked:  output/genotype.chr6.txt
+    Untracked:  output/genotype.chr7.txt
+    Untracked:  output/genotype.chr8.txt
+    Untracked:  output/genotype.chr9.txt
+    Untracked:  output/peer_out/
+    Untracked:  output/snp_annot.chr1.txt
+    Untracked:  output/snp_annot.chr10.txt
+    Untracked:  output/snp_annot.chr11.txt
+    Untracked:  output/snp_annot.chr12.txt
+    Untracked:  output/snp_annot.chr13.txt
+    Untracked:  output/snp_annot.chr14.txt
+    Untracked:  output/snp_annot.chr15.txt
+    Untracked:  output/snp_annot.chr16.txt
+    Untracked:  output/snp_annot.chr17.txt
+    Untracked:  output/snp_annot.chr18.txt
+    Untracked:  output/snp_annot.chr19.txt
+    Untracked:  output/snp_annot.chr2.txt
+    Untracked:  output/snp_annot.chr20.txt
+    Untracked:  output/snp_annot.chr21.txt
+    Untracked:  output/snp_annot.chr22.txt
+    Untracked:  output/snp_annot.chr3.txt
+    Untracked:  output/snp_annot.chr4.txt
+    Untracked:  output/snp_annot.chr5.txt
+    Untracked:  output/snp_annot.chr6.txt
+    Untracked:  output/snp_annot.chr7.txt
+    Untracked:  output/snp_annot.chr8.txt
+    Untracked:  output/snp_annot.chr9.txt
+    Untracked:  output/transformed_expression.txt
+    Untracked:  summary/
+    Untracked:  weights/
+
+Unstaged changes:
+    Deleted:    PredictDB-Scripts/gtex_tiss_chrom_training.R
+    Deleted:    PredictDB-Scripts/gtex_v7_nested_cv_elnet.R
+    Deleted:    PredictDB-Scripts/parse_gtf.py
+    Deleted:    PredictDB-Scripts/split_genotype_by_chr.py
+    Deleted:    PredictDB-Scripts/split_snp_annot_by_chr.py
+    Deleted:    PredictDB-Tutorial.Rmd
+    Modified:   _workflowr.yml
+    Modified:   analysis/index.Rmd
+
+</code></pre>
+<p>
+Note that any generated files, e.g. HTML, png, CSS, etc., are not included in this status report because it is ok for generated content to have uncommitted changes.
+</p>
+</div>
+</div>
+</div>
+</div>
+<hr>
+</div>
+<div id="versions" class="tab-pane fade">
+<p>
+There are no past versions. Publish this analysis with <code>wflow_publish()</code> to start tracking its development.
+</p>
+<hr>
+</div>
+</div>
+</div>
+<pre class="r"><code>library(tidyverse)</code></pre>
+<pre><code>── Attaching packages ────────────────────────────────────────────────────────── tidyverse 1.3.0 ──</code></pre>
+<pre><code>✓ ggplot2 3.3.0     ✓ purrr   0.3.4
+✓ tibble  3.0.1     ✓ dplyr   0.8.5
+✓ tidyr   1.0.3     ✓ stringr 1.4.0
+✓ readr   1.3.1     ✓ forcats 0.5.0</code></pre>
+<pre><code>── Conflicts ───────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+x dplyr::filter() masks stats::filter()
+x dplyr::lag()    masks stats::lag()</code></pre>
+<pre class="r"><code>library(dplyr)
+library(RSQLite)</code></pre>
+<div id="download-data-from-here-into-data-dir" class="section level2">
+<h2>Download data from <a href="https://uchicago.app.box.com/folder/118354657358">here</a> into data dir</h2>
+</div>
+<div id="data" class="section level1">
+<h1>Data</h1>
+<ul>
+<li>Gene expression - YRI_expression_data.txt Normalized gene expression in .txt format.</li>
+<li>SNP annotation - geuvadis.annot.txt</li>
+<li>Gene annotation - gencode.v12.annotation.gtf</li>
+<li>Genotype - geuvadis.snps.dosage.txt</li>
+</ul>
+<p>Loading the data:</p>
+<pre class="r"><code>gene_exp = read.table(file = &quot;../data/YRI_expression_data.txt&quot;, header = TRUE, sep = &quot;\t&quot; )</code></pre>
+<pre class="r"><code>## Dropping columns we don&#39;t need in the gene expression dataframe
+## We drop the TargetID, Chr and Coord columns
+gene_exp = gene_exp[-c(1, 3, 4)]</code></pre>
+<pre class="r"><code># Rename the gene name
+gene_exp = rename(gene_exp, &#39;Gene_Name&#39; = Gene_Symbol)</code></pre>
+<p>Process the gene annotation file Gene annotation. Use the script parse_gtf.py with first argument the path to the annotation file, and second argument the file output. This will create a new tab-delimited text file from the gtf file with only the necessary features for the model creation.</p>
+<pre class="bash"><code>../code/parse_gtf.py ../data/&#39;gencode.v12.annotation.gtf&#39; ../output/&#39;gene_annot.parsed.txt&#39;</code></pre>
+<p>This will create an RDS object out of the gene annotation file text file –&gt; FOR OLDER VERSION</p>
+<pre class="bash"><code>#Rscript ../PredictDB-Scripts/geno_annot_to_RDS.R ../output/&#39;gene_annot.parsed.txt&#39; ../output/&#39;gene_annot.RDS&#39;</code></pre>
+<ol start="2" style="list-style-type: decimal">
+<li>SNP Annotation - First we will rename the columns to fit the pipeline:</li>
+</ol>
+<pre class="bash"><code>## Trying to think of a better way to automate this
+
+sed -e &#39;s/Chr/chromosome/g&#39; -e &#39;s/Ref_b37/ref_vcf/g&#39; -e &#39;s/Alt/alt_vcf/g&#39; ../data/geuvadis.annot.txt &gt; ../data/snp_annotation.txt</code></pre>
+<p>Then we want to split this file by chromosome and turn them into .RDS format. We will end up with 22 separate .RDS files corresponding to the 22 chromosomes.</p>
+<pre class="bash"><code>../code/split_snp_annot_by_chr.py ../data/geuvadis.annot.txt ../output/snp_annot</code></pre>
+<p>Now we will turn all of these SNP annotation txt files into .RDS format so they can be used in the model. –&gt; FOR OLDER VERSION</p>
+<pre class="bash"><code># Rscript ../PredictDB-Scripts/snp_annot_to_RDS.R ../output/&#39;snp_annot.chr&#39;</code></pre>
+<ol start="3" style="list-style-type: decimal">
+<li>Genotype File - Again, first we rename the columns to fit the pipeline.</li>
+</ol>
+<pre class="bash"><code>sed &#39;s/Id/varID/g&#39; ../data/geuvadis.snps.dosage.txt &gt; ../data/genotype.txt</code></pre>
+<p>Then we want to also split this by chromosome:</p>
+<pre class="bash"><code>../code/split_genotype_by_chr.py ../data/geuvadis.snps.dosage.txt ../output/genotype</code></pre>
+<p>Creating the PEER covariates - We want to regress out covariate factors from the gene expression data. We want to generate PEER factors <a href="https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3398141/" class="uri">https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3398141/</a> and use those as our covariates and then perform a multiple linear regression for each gene in our gene expression matrix and then save the residuals from the regressions as our new expressions.</p>
+<p>There is a description of how to download the PEER tool here : <a href="https://github.com/hakyimlab/peer" class="uri">https://github.com/hakyimlab/peer</a></p>
+<p>First we must transpose the gene expression matrix</p>
+<pre class="r"><code>n = gene_exp$Gene_Name
+gene_exp_transpose &lt;- as.data.frame(t(gene_exp[,-1]))
+colnames(gene_exp_transpose) &lt;- n</code></pre>
+<p>Then we must turn this dataframe into a csv file to be used by the PEER tool:</p>
+<pre class="r"><code>write.table(gene_exp_transpose, file = &#39;../output/gene_exp.csv&#39;, sep = &quot;,&quot;, col.names = TRUE, row.names = FALSE)</code></pre>
+<p>Now we use the PEER tool on the csv file to generate PEER factors. According to GTEx protocol, If the number of samples is greater than or equal to 350, we use 60 PEER factors. If the number of samples is between 250 and 350, we use 45. Between 150 and 250, we use 30, and less than 150 we use 15. For this study, the number of samples is 463 so we will use 60 PEER factors.</p>
+<pre class="bash"><code>## Note this takes a LONG time. Maybe we should skip this for now especially when testing and debugging code. I even tried to run it for just 1 or 5 PEER factors and it takes forever. 
+
+peertool -f &#39;../output/gene_exp.csv&#39; -n 3 --has_header -o ../output/peer_out</code></pre>
+<pre><code>mkdir: cannot create directory ‘../output/peer_out’: File exists
+    iteration 0/50
+    iteration 1/50
+    iteration 2/50
+    iteration 3/50
+    iteration 4/50
+    iteration 5/50
+    iteration 6/50
+    iteration 7/50
+    iteration 8/50
+    iteration 9/50
+    iteration 10/50
+    iteration 11/50
+    iteration 12/50
+    iteration 13/50
+    iteration 14/50
+    iteration 15/50
+    iteration 16/50
+    iteration 17/50
+    iteration 18/50
+    iteration 19/50
+    iteration 20/50
+    iteration 21/50
+    iteration 22/50
+    iteration 23/50
+    iteration 24/50
+    iteration 25/50
+    iteration 26/50
+    iteration 27/50
+    iteration 28/50
+    iteration 29/50
+    iteration 30/50
+    iteration 31/50
+    iteration 32/50
+    iteration 33/50
+    iteration 34/50
+    iteration 35/50
+    iteration 36/50
+    iteration 37/50
+    iteration 38/50
+    iteration 39/50
+    iteration 40/50
+    iteration 41/50
+    iteration 42/50
+    iteration 43/50
+    iteration 44/50
+    iteration 45/50
+    iteration 46/50
+    iteration 47/50
+    iteration 48/50
+    iteration 49/50
+Maximum number of iterations reached: 50</code></pre>
+<p>Now we read in the output of the PEER tool which is our covariate matrix.</p>
+<pre class="r"><code>peer_factors = read.csv(file = &quot;../output/peer_out/X.csv&quot;, header = FALSE)
+
+#Set the column names for the PEER factors (covariates) as the subject IDs
+colnames(peer_factors) = rownames(gene_exp_transpose)</code></pre>
+<p>We must write the covariates as a .txt file because that is what the pipeline takes</p>
+<pre class="r"><code>write.table(peer_factors, file = &quot;../output/covariates.txt&quot;, sep = &quot;\t&quot;,
+            row.names = TRUE)</code></pre>
+<p>Now we run our multiple linear regression and set the matrix of the residuals as our new expressions</p>
+<pre class="r"><code>## This is making a copy of the gene expression transposed dataframe so that we can replace the values with the residuals of the multiple linear regressions.
+
+expression = gene_exp_transpose</code></pre>
+<pre class="r"><code># This loops through all the columns of the transposed gene expression which correspond to each gene and for each gene it runs  linear regression on the PEER factor covariates. Then it sets the residuals to the new expression for that gene.
+for (i in 1:length(colnames(gene_exp_transpose))) {
+    fit = lm(gene_exp_transpose[,i] ~ t(as.matrix(peer_factors)))
+    expression[,i] &lt;- fit$residuals
+  }</code></pre>
+<p>Write out the transformed expression</p>
+<pre class="r"><code># Write out the final expression file
+write.table(expression, file = &quot;../output/transformed_expression.txt&quot;, sep = &quot;\t&quot;,
+            row.names = TRUE)</code></pre>
+<p>Tutorial for gtex v7 pipeline:</p>
+<p>First you must change the paths in the file ‘gtex_tiss_chrom_training.R’ to fit the paths of the data in your directories you should have. Also make it so that it only takes chrom as an argument instead of tissue if it doesn’t already do that.</p>
+<pre class="bash"><code>mkdir -p ../summary ../covariances ../weights</code></pre>
+<p>Then you run this for all chromosomes:</p>
+<pre class="bash"><code># This script invokes other scripts to train the model. Repeat this step for all the 22 chromosomes.
+#Use the for loop below to run all by uncomenting the line below for demo I will run one chromosome(21)
+#for i in {1..22}; do Rscript ../code/gtex_tiss_chrom_training.R $i; done
+
+Rscript ../code/gtex_tiss_chrom_training.R 21
+</code></pre>
+<pre><code>1 / 231 
+2 / 231 
+3 / 231 
+4 / 231 
+5 / 231 
+6 / 231 
+7 / 231 
+8 / 231 
+9 / 231 
+10 / 231 
+11 / 231 
+12 / 231 
+13 / 231 
+14 / 231 
+15 / 231 
+16 / 231 
+17 / 231 
+18 / 231 
+19 / 231 
+20 / 231 
+21 / 231 
+22 / 231 
+23 / 231 
+24 / 231 
+25 / 231 
+26 / 231 
+27 / 231 
+28 / 231 
+29 / 231 
+30 / 231 
+31 / 231 
+32 / 231 
+33 / 231 
+34 / 231 
+35 / 231 
+36 / 231 
+37 / 231 
+38 / 231 
+39 / 231 
+40 / 231 
+41 / 231 
+42 / 231 
+43 / 231 
+44 / 231 
+45 / 231 
+46 / 231 
+47 / 231 
+48 / 231 
+49 / 231 
+50 / 231 
+51 / 231 
+52 / 231 
+53 / 231 
+54 / 231 
+55 / 231 
+56 / 231 
+57 / 231 
+58 / 231 
+59 / 231 
+60 / 231 
+61 / 231 
+62 / 231 
+63 / 231 
+64 / 231 
+65 / 231 
+66 / 231 
+67 / 231 
+68 / 231 
+69 / 231 
+70 / 231 
+71 / 231 
+72 / 231 
+73 / 231 
+74 / 231 
+75 / 231 
+76 / 231 
+77 / 231 
+78 / 231 
+79 / 231 
+80 / 231 
+81 / 231 
+82 / 231 
+83 / 231 
+84 / 231 
+85 / 231 
+86 / 231 
+87 / 231 
+88 / 231 
+89 / 231 
+90 / 231 
+91 / 231 
+92 / 231 
+93 / 231 
+94 / 231 
+95 / 231 
+96 / 231 
+97 / 231 
+98 / 231 
+99 / 231 
+100 / 231 
+101 / 231 
+102 / 231 
+103 / 231 
+104 / 231 
+105 / 231 
+106 / 231 
+107 / 231 
+108 / 231 
+109 / 231 
+110 / 231 
+111 / 231 
+112 / 231 
+113 / 231 
+114 / 231 
+115 / 231 
+116 / 231 
+117 / 231 
+118 / 231 
+119 / 231 
+120 / 231 
+121 / 231 
+122 / 231 
+123 / 231 
+124 / 231 
+125 / 231 
+126 / 231 
+127 / 231 
+128 / 231 
+129 / 231 
+130 / 231 
+131 / 231 
+132 / 231 
+133 / 231 
+134 / 231 
+135 / 231 
+136 / 231 
+137 / 231 
+138 / 231 
+139 / 231 
+140 / 231 
+141 / 231 
+142 / 231 
+143 / 231 
+144 / 231 
+145 / 231 
+146 / 231 
+147 / 231 
+148 / 231 
+149 / 231 
+150 / 231 
+151 / 231 
+152 / 231 
+153 / 231 
+154 / 231 
+155 / 231 
+156 / 231 
+157 / 231 
+158 / 231 
+159 / 231 
+160 / 231 
+161 / 231 
+162 / 231 
+163 / 231 
+164 / 231 
+165 / 231 
+166 / 231 
+167 / 231 
+168 / 231 
+169 / 231 
+170 / 231 
+171 / 231 
+172 / 231 
+173 / 231 
+174 / 231 
+175 / 231 
+176 / 231 
+177 / 231 
+178 / 231 
+179 / 231 
+180 / 231 
+181 / 231 
+182 / 231 
+183 / 231 
+184 / 231 
+185 / 231 
+186 / 231 
+187 / 231 
+188 / 231 
+189 / 231 
+190 / 231 
+191 / 231 
+192 / 231 
+193 / 231 
+194 / 231 
+195 / 231 
+196 / 231 
+197 / 231 
+198 / 231 
+199 / 231 
+200 / 231 
+201 / 231 
+202 / 231 
+203 / 231 
+204 / 231 
+205 / 231 
+206 / 231 
+207 / 231 
+208 / 231 
+209 / 231 
+210 / 231 
+211 / 231 
+212 / 231 
+213 / 231 
+214 / 231 
+215 / 231 
+216 / 231 
+217 / 231 
+218 / 231 
+219 / 231 
+220 / 231 
+221 / 231 
+222 / 231 
+223 / 231 
+224 / 231 
+225 / 231 
+226 / 231 
+227 / 231 
+228 / 231 
+229 / 231 
+230 / 231 
+231 / 231 </code></pre>
+<p>Make dir for databases</p>
+<pre class="bash"><code>mkdir -p ../dbs</code></pre>
+<p>Create databases Once we have our model summaries we combine them into a single file then create a database</p>
+<pre class="r"><code>&quot;%&amp;%&quot; &lt;- function(a,b) paste(a,b, sep=&#39;&#39;)
+
+driver &lt;- dbDriver(&#39;SQLite&#39;)
+
+model_summaries &lt;- read.table(&#39;../summary/Model_training_chr1_model_summaries.txt&#39;,                                                       header = T, stringsAsFactors = F)
+tiss_summary &lt;- read.table(&#39;../summary/Model_training_chr1_summary.txt&#39;,                                                         header = T, stringsAsFactors = F)
+  
+n_samples &lt;- tiss_summary$n_samples
+  
+for (i in 2:22) {
+  model_summaries &lt;- rbind(model_summaries,
+                            read.table(&#39;../summary/Model_training_chr&#39;%&amp;%as.character(i) %&amp;% &#39;_model_summaries.txt&#39;, header = T, stringsAsFactors = F))
+  tiss_summary &lt;- rbind(tiss_summary,
+                             read.table(&#39;../summary/Model_training_chr&#39; %&amp;% as.character(i) %&amp;% &#39;_summary.txt&#39;, header = T, stringsAsFactors = F))
+  
+}
+  
+model_summaries &lt;- rename(model_summaries, gene = gene_id)
+
+conn &lt;- dbConnect(drv = driver, &#39;../dbs/gtex_v7_models.db&#39;)
+dbWriteTable(conn, &#39;model_summaries&#39;, model_summaries, overwrite = TRUE)
+dbExecute(conn, &quot;CREATE INDEX gene_model_summary ON model_summaries (gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code># Weights Table -----
+weights &lt;- read.table(&#39;../weights/Model_training_chr1_weights.txt&#39;, header = T,                                                                 stringsAsFactors = F)
+for (i in 2:22) {
+  weights &lt;- rbind(weights,
+                       read.table(&#39;../weights/Model_training_chr&#39; %&amp;% as.character(i) %&amp;% &#39;_weights.txt&#39;, header = T, stringsAsFactors = F))
+  
+}
+  
+weights &lt;- rename(weights, gene = gene_id)
+dbWriteTable(conn, &#39;weights&#39;, weights, overwrite = TRUE)
+dbExecute(conn, &quot;CREATE INDEX weights_rsid ON weights (rsid)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbExecute(conn, &quot;CREATE INDEX weights_gene ON weights (gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbExecute(conn, &quot;CREATE INDEX weights_rsid_gene ON weights (rsid, gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code># Sample_info Table ----
+sample_info &lt;- data.frame(n_samples = n_samples, population = &#39;yoruba&#39;)
+dbWriteTable(conn, &#39;sample_info&#39;, sample_info, overwrite = TRUE)
+  
+# Construction Table ----
+construction &lt;- tiss_summary %&gt;%
+                    select(chrom, cv_seed) %&gt;%
+                    rename(chromosome = chrom)
+dbWriteTable(conn, &#39;construction&#39;, construction, overwrite = TRUE)
+
+dbDisconnect(conn)</code></pre>
+<p>Filter Database to select only significant genes</p>
+<pre class="r"><code>unfiltered_db &lt;- &#39;../dbs/gtex_v7_models.db&#39;
+filtered_db &lt;- &#39;../dbs/gtex_v7_models_filtered_signif.db&#39;
+
+driver &lt;- dbDriver(&quot;SQLite&quot;)
+
+in_conn &lt;- dbConnect(driver, unfiltered_db)
+out_conn &lt;- dbConnect(driver, filtered_db)
+model_summaries &lt;- dbGetQuery(in_conn, &#39;select * from model_summaries where zscore_pval &lt; 0.05 and rho_avg &gt; 0.1&#39;)
+model_summaries &lt;- model_summaries %&gt;% 
+                    rename(pred.perf.R2 = rho_avg_squared, genename = gene_name, pred.perf.pval = zscore_pval, n.snps.in.model = n_snps_in_model)
+model_summaries$pred.perf.qval &lt;- NA
+dbWriteTable(out_conn, &#39;extra&#39;, model_summaries, overwrite = TRUE)
+construction &lt;- dbGetQuery(in_conn, &#39;select * from construction&#39;)
+dbWriteTable(out_conn, &#39;construction&#39;, construction, overwrite = TRUE)
+sample_info &lt;- dbGetQuery(in_conn, &#39;select * from sample_info&#39;)
+dbWriteTable(out_conn, &#39;sample_info&#39;, sample_info, overwrite = TRUE)
+weights &lt;- dbGetQuery(in_conn, &#39;select * from weights&#39;)
+weights &lt;- weights %&gt;% filter(gene %in% model_summaries$gene) %&gt;% rename(eff_allele = alt, ref_allele = ref, weight = beta)
+dbWriteTable(out_conn, &#39;weights&#39;, weights, overwrite = TRUE)
+dbExecute(out_conn, &quot;CREATE INDEX weights_rsid ON weights (rsid)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbExecute(out_conn, &quot;CREATE INDEX weights_gene ON weights (gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbExecute(out_conn, &quot;CREATE INDEX weights_rsid_gene ON weights (rsid, gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbExecute(out_conn, &quot;CREATE INDEX gene_model_summary ON extra (gene)&quot;)</code></pre>
+<pre><code>[1] 0</code></pre>
+<pre class="r"><code>dbDisconnect(in_conn)
+dbDisconnect(out_conn)</code></pre>
+<br>
+<p>
+<button type="button" class="btn btn-default btn-workflowr btn-workflowr-sessioninfo" data-toggle="collapse" data-target="#workflowr-sessioninfo" style="display: block;">
+<span class="glyphicon glyphicon-wrench" aria-hidden="true"></span> Session information
+</button>
+</p>
+<div id="workflowr-sessioninfo" class="collapse">
+<pre class="r"><code>sessionInfo()</code></pre>
+<pre><code>R version 3.6.3 (2020-02-29)
+Platform: x86_64-pc-linux-gnu (64-bit)
+Running under: Ubuntu 18.04.5 LTS
+
+Matrix products: default
+BLAS:   /usr/lib/x86_64-linux-gnu/blas/libblas.so.3.7.1
+LAPACK: /usr/lib/x86_64-linux-gnu/lapack/liblapack.so.3.7.1
+
+locale:
+ [1] LC_CTYPE=en_US.UTF-8       LC_NUMERIC=C              
+ [3] LC_TIME=en_US.UTF-8        LC_COLLATE=en_US.UTF-8    
+ [5] LC_MONETARY=en_US.UTF-8    LC_MESSAGES=en_US.UTF-8   
+ [7] LC_PAPER=en_US.UTF-8       LC_NAME=C                 
+ [9] LC_ADDRESS=C               LC_TELEPHONE=C            
+[11] LC_MEASUREMENT=en_US.UTF-8 LC_IDENTIFICATION=C       
+
+attached base packages:
+[1] stats     graphics  grDevices utils     datasets  methods   base     
+
+other attached packages:
+ [1] RSQLite_2.2.0   forcats_0.5.0   stringr_1.4.0   dplyr_0.8.5    
+ [5] purrr_0.3.4     readr_1.3.1     tidyr_1.0.3     tibble_3.0.1   
+ [9] ggplot2_3.3.0   tidyverse_1.3.0
+
+loaded via a namespace (and not attached):
+ [1] tidyselect_1.1.0 xfun_0.13        haven_2.2.0      lattice_0.20-41 
+ [5] colorspace_1.4-1 vctrs_0.3.0      generics_0.0.2   htmltools_0.4.0 
+ [9] yaml_2.2.1       blob_1.2.1       rlang_0.4.6      later_1.0.0     
+[13] pillar_1.4.4     withr_2.2.0      glue_1.4.1       DBI_1.1.0       
+[17] bit64_0.9-7      dbplyr_1.4.3     modelr_0.1.7     readxl_1.3.1    
+[21] lifecycle_0.2.0  munsell_0.5.0    gtable_0.3.0     workflowr_1.6.2 
+[25] cellranger_1.1.0 rvest_0.3.5      memoise_1.1.0    evaluate_0.14   
+[29] knitr_1.28       httpuv_1.5.2     fansi_0.4.1      broom_0.5.6     
+[33] Rcpp_1.0.4.6     promises_1.1.0   backports_1.1.7  scales_1.1.1    
+[37] jsonlite_1.6.1   bit_1.1-15.2     fs_1.4.1         hms_0.5.3       
+[41] digest_0.6.25    stringi_1.4.6    grid_3.6.3       rprojroot_1.3-2 
+[45] cli_2.0.2        tools_3.6.3      magrittr_1.5     crayon_1.3.4    
+[49] pkgconfig_2.0.3  ellipsis_0.3.1   xml2_1.3.2       reprex_0.3.0    
+[53] lubridate_1.7.8  rstudioapi_0.11  assertthat_0.2.1 rmarkdown_2.1   
+[57] httr_1.4.1       R6_2.4.1         nlme_3.1-147     git2r_0.27.1    
+[61] compiler_3.6.3  </code></pre>
+</div>
+</div>
+
+
+<!-- Adjust MathJax settings so that all math formulae are shown using
+TeX fonts only; see
+http://docs.mathjax.org/en/latest/configuration.html.  This will make
+the presentation more consistent at the cost of the webpage sometimes
+taking slightly longer to load. Note that this only works because the
+footer is added to webpages before the MathJax javascript. -->
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({
+    "HTML-CSS": { availableFonts: ["TeX"] }
+  });
+</script>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_').toLowerCase();
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
