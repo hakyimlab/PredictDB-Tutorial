@@ -5,4 +5,4 @@
 seed: 20200724
 # The working directory to build the R Markdown files. The path is relative to
 # _workflowr.yml. See ?rmarkdown::render for details.
-knit_root_dir: "."
+knit_root_dir: "analysis"

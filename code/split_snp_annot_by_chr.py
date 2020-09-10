@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 
 import sys
 
@@ -26,7 +26,7 @@ NOTE: the rsid number chosen is from rsidlabel2.
 '''
 
 SNP_COMPLEMENT = {'A':'T', 'C':'G', 'G':'C', 'T':'A'}
-HEADER_FIELDS = ['chr','pos','varID','refAllele','effectAllele','rsid']
+HEADER_FIELDS = ['chromosome','pos','varID','ref_vcf','alt_vcf','rsid']
 
 def split_snp_annot(annot_file, out_prefix):
     # Make output file names from prefix.

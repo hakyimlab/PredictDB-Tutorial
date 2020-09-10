@@ -1,3 +1,5 @@
+#! /usr/bin/env Rscript
+
 suppressMessages(library(dplyr))
 suppressMessages(library(glmnet))
 suppressMessages((library(reshape2)))
@@ -11,7 +13,7 @@ get_filtered_snp_annot <- function(snp_annot_file_name) {
                (ref_vcf == 'T' & alt_vcf == 'A') |
                (ref_vcf == 'C' & alt_vcf == 'G') |
                (ref_vcf == 'G' & alt_vcf == 'C')) &
-             !(is.na(rsid_dbSNP150))) %>%
+             !(is.na(rsid))) %>%
     distinct(varID, .keep_all = TRUE)
   snp_annot
 }
@@ -19,7 +21,7 @@ get_filtered_snp_annot <- function(snp_annot_file_name) {
 
 get_maf_filtered_genotype <- function(genotype_file_name,  maf, samples) {
   gt_df <- read.table(genotype_file_name, header = T, stringsAsFactors = F, row.names = 1)
-  gt_df <- gt_df[,samples] %>% t() %>% as.data.frame()
+  gt_df <- gt_df[,(colnames(gt_df) %in% samples )] %>% t() %>% as.data.frame()
   effect_allele_freqs <- colMeans(gt_df) / 2
   gt_df <- gt_df[,which((effect_allele_freqs >= maf) & (effect_allele_freqs <= 1 - maf))]
   gt_df
@@ -37,6 +39,7 @@ get_gene_type <- function(gene_annot, gene) {
 
 get_gene_expression <- function(gene_expression_file_name, gene_annot) {
   expr_df <- as.data.frame(t(read.table(gene_expression_file_name, header = T, stringsAsFactors = F, row.names = 1)))
+  expr_df <- expr_df %>% t() %>% as.data.frame()
   expr_df <- expr_df %>% select(one_of(intersect(gene_annot$gene_id, colnames(expr_df))))
   expr_df
 }
@@ -47,10 +50,15 @@ get_gene_coords <- function(gene_annot, gene) {
 }
 
 get_cis_genotype <- function(gt_df, snp_annot, coords, cis_window) {
-  snp_info <- snp_annot %>% filter((pos >= (coords[1] - cis_window) & !is.na(rsid_dbSNP150)) & (pos <= (coords[2] + cis_window)))
+  snp_info <- snp_annot %>% filter((pos >= (coords[1] - cis_window) & !is.na(rsid)) & (pos <= (coords[2] + cis_window)))
   if (nrow(snp_info) == 0)
     return(NA)
+  #Check of the varID exist in the data
+  if (TRUE %in% (snp_info$varID %in% names(gt_df))) {
   cis_gt <- gt_df %>% select(one_of(intersect(snp_info$varID, colnames(gt_df))))
+  } else {
+    return(NA) # the varID doesn't exist in the gt_df dataset
+  }
   column_labels <- colnames(cis_gt)
   row_labels <- rownames(cis_gt)
   # Convert cis_gt to a matrix for glmnet
@@ -62,7 +70,7 @@ get_cis_genotype <- function(gt_df, snp_annot, coords, cis_window) {
 
 get_covariates <- function(covariate_file_name, samples) {
   cov_df <- read.table(covariate_file_name, header = TRUE, stringsAsFactors = FALSE, row.names = 1)
-  cov_df <- cov_df[,samples] %>% t() %>% as.data.frame()
+  cov_df <- cov_df[,(names(cov_df) %in% samples )] %>% t() %>% as.data.frame()
   cov_df
 }
 
@@ -89,7 +97,7 @@ calc_corr <- function(y, y_pred) {
   sum(y*y_pred) / (sqrt(sum(y**2)) * sqrt(sum(y_pred**2)))
 }
 
-nested_cv_elastic_net_perf <- function(x, y, n_samples, n_train_test_folds, n_k_folds, alpha) {
+nested_cv_elastic_net_perf <- function(x, y, n_samples, n_train_test_folds, n_k_folds, alpha, samples) {
   # Gets performance estimates for k-fold cross-validated elastic-net models.
   # Splits data into n_train_test_folds disjoint folds, roughly equal in size,
   # and for each fold, calculates a n_k_folds cross-validated elastic net model. Lambda parameter is
@@ -108,10 +116,10 @@ nested_cv_elastic_net_perf <- function(x, y, n_samples, n_train_test_folds, n_k_
   for (test_fold in 1:n_train_test_folds) {
     train_idxs <- which(train_test_fold_ids != test_fold)
     test_idxs <- which(train_test_fold_ids == test_fold)
-    x_train <- x[train_idxs, ]
-    y_train <- y[train_idxs]
-    x_test <- x[test_idxs, ]
-    y_test <- y[test_idxs]
+    x_train <- x[(rownames(x) %in% samples[train_idxs]), ]
+    y_train <- y[(rownames(y) %in% rownames(x_train))]
+    x_test <- x[(rownames(x) %in% samples[test_idxs]), ]
+    y_test <- y[(rownames(y) %in% rownames(x_test))]
     # Inner-loop - split up training set for cross-validation to choose lambda.
     cv_fold_ids <- generate_fold_ids(length(y_train), n_k_folds)
     y_pred <- tryCatch({
@@ -184,7 +192,7 @@ main <- function(snp_annot_file, gene_annot_file, genotype_file, expression_file
   weights_col <- c('gene_id', 'rsid', 'varID', 'ref', 'alt', 'beta')
   write(weights_col, file = weights_file, ncol = 6, sep = '\t')
   
-  tiss_chr_summ_f <- '../summary/' %&% prefix %&% '_chr' %&% chrom %&% '_tiss_chr_summary.txt'
+  tiss_chr_summ_f <- '../summary/' %&% prefix %&% '_chr' %&% chrom %&% '_summary.txt'
   tiss_chr_summ_col <- c('n_samples', 'chrom', 'cv_seed', 'n_genes')
   tiss_chr_summ <- data.frame(n_samples, chrom, seed, n_genes)
   colnames(tiss_chr_summ) <- tiss_chr_summ_col
@@ -212,9 +220,10 @@ main <- function(snp_annot_file, gene_annot_file, genotype_file, expression_file
     if (ncol(cis_gt) >= 2) {
       expression_vec <- expr_df[,i]
       adj_expression <- adjust_for_covariates(expression_vec, covariates_df)
+      adj_expression <- as.matrix(adj_expression[(rownames(adj_expression) %in% rownames(cis_gt)),])
       if (null_testing)
         adj_expression <- sample(adj_expression)
-      perf_measures <- nested_cv_elastic_net_perf(cis_gt, adj_expression, n_samples, n_train_test_folds, n_folds, alpha)
+      perf_measures <- nested_cv_elastic_net_perf(cis_gt, adj_expression, n_samples, n_train_test_folds, n_folds, alpha, samples)
       R2_avg <- perf_measures$R2_avg
       R2_sd <- perf_measures$R2_sd
       pval_est <- perf_measures$pval_est
@@ -258,13 +267,13 @@ main <- function(snp_annot_file, gene_annot_file, genotype_file, expression_file
           
           weights <- fit$glmnet.fit$beta[which(fit$glmnet.fit$beta[,best_lam_ind] != 0), best_lam_ind]
           weighted_snps <- names(fit$glmnet.fit$beta[,best_lam_ind])[which(fit$glmnet.fit$beta[,best_lam_ind] != 0)]
-          weighted_snps_info <- snp_annot %>% filter(varID %in% weighted_snps) %>% select(rsid_dbSNP150, varID, ref_vcf, alt_vcf)
+          weighted_snps_info <- snp_annot %>% filter(varID %in% weighted_snps) %>% select(rsid, varID, ref_vcf, alt_vcf)
           weighted_snps_info$gene <- gene
           weighted_snps_info <- weighted_snps_info %>%
             merge(data.frame(weights = weights, varID=weighted_snps), by = 'varID') %>%
-            select(gene, rsid_dbSNP150, varID, ref_vcf, alt_vcf, weights)
+            select(gene, rsid, varID, ref_vcf, alt_vcf, weights)
           write.table(weighted_snps_info, file = weights_file, append = TRUE, quote = FALSE, col.names = FALSE, row.names = FALSE, sep = '\t')
-          covariance_df <- do_covariance(gene, cis_gt, weighted_snps_info$rsid_dbSNP150, weighted_snps_info$varID)
+          covariance_df <- do_covariance(gene, cis_gt, weighted_snps_info$rsid, weighted_snps_info$varID)
           write.table(covariance_df, file = covariance_file, append = TRUE, quote = FALSE, col.names = FALSE, row.names = FALSE, sep = " ")
           model_summary <- c(gene, gene_name, gene_type, alpha, ncol(cis_gt), fit$nzero[best_lam_ind], fit$lambda[best_lam_ind], R2_avg, R2_sd, cv_R2_avg, cv_R2_sd, training_R2, pval_est,
                              rho_avg, rho_se, rho_zscore, rho_avg_squared, zscore_pval, cv_rho_avg, cv_rho_se, cv_rho_avg_squared, cv_zscore_est, cv_zscore_pval, cv_pval_est)
@@ -281,3 +290,4 @@ main <- function(snp_annot_file, gene_annot_file, genotype_file, expression_file
     write(model_summary, file = model_summary_file, append = TRUE, ncol = 24, sep = '\t')
   }
 }
+
