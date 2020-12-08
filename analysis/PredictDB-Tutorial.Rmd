@@ -16,7 +16,7 @@ library(RSQLite)
 ```
 
 
-## Download data from [here](https://uchicago.app.box.com/folder/118354657358)
+## Download data from [here](https://uchicago.app.box.com/s/ewnrqs31ivobz2sn6462cq2eb423dvpr)
 
 # Data
   * Gene expression - YRI_expression_data.txt
