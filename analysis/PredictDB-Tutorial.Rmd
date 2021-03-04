@@ -97,9 +97,11 @@ gene_exp_transpose <- as.data.frame(t(gene_exp[,-1]))
 colnames(gene_exp_transpose) <- n
 ```
 
-Then we must turn this dataframe into a csv file to be used by the PEER tool:
+Then we must turn this dataframe into a csv file to be used by the PEER tool and another one to be used as an input for the gtex pipeline
 ```{r}
 write.table(gene_exp_transpose, file = '../output/gene_exp.csv', sep = ",", col.names = TRUE, row.names = FALSE)
+write.table(gene_exp_transpose, file = "../output/transformed_expression.txt", sep = "\t",
+            row.names = TRUE)
 ```
 
 Now we use the PEER tool on the csv file to generate PEER factors. According to GTEx protocol, If the number of samples is greater than or equal to 350, we use 60 PEER factors. If the number of samples is between 250 and 350, we use 45. Between 150 and 250, we use 30, and less than 150 we use 15. For this study, the number of samples is 463 so we will use 60 PEER factors.
@@ -139,15 +141,20 @@ for (i in 1:length(colnames(gene_exp_transpose))) {
   }
 ```
 
-Write out the transformed expression
+Write out the residuals of the expression
 ```{r}
 # Write out the final expression file
-write.table(expression, file = "../output/transformed_expression.txt", sep = "\t",
+write.table(expression, file = "../output/residuals_expression.txt", sep = "\t",
             row.names = TRUE)
 ```
 
 
+NB: The residuals expression file can be used for other analyses
+
 Tutorial for gtex v7 pipeline:
+
+Expression file: Use the transposed expression file as the input `gene_exp.csv`
+Covariates: Use the covariates file `covariates.txt` as the inputs. If you have other covariates you want to regress out bind them to the `covariates.txt` ensuring the first column has the covariate identifier while the rest of the columns are the values for each individual. Each row represents a single covariate to be regressed out.
 
 
 First you must change the paths in the file 'gtex_tiss_chrom_training.R' to fit the paths of the data in your directories. Also make it so that it only takes chrom as an argument instead of tissue if it doesn't already do that.
