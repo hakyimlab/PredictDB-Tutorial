@@ -11,7 +11,7 @@ The training dataset can ne downloaded from this [link](https://uchicago.box.com
   3. Gene annotation file - `gencode.v12.annotation.gtf.gz`
   4. Genotype (text format) - `geuvadis.snps.dosage.txt`
 
-Download the files into a directory named `data`.
+Download the files into a directory named `data` and decompress them.
 
 
 ## Preprocess the genotype
@@ -26,11 +26,19 @@ First do a quick renaming of the field headers to match the desired column names
 ```
 sed -e 's/Chr/chromosome/g' -e 's/Ref_b37/ref_vcf/g' -e 's/Alt/alt_vcf/g' ./data/geuvadis.annot.txt > ./data/snp_annotation.txt
 ```
-Split the annotation file into individual chromosomes. You will end up with 22 files for each autosome
+>>Split the annotation file into individual chromosomes. You will end up with 22 files for each autosome
 ```
-python ./code/split_snp_annot_by_chr.py ./data/geuvadis.annot.txt ./output/snp_annot
+python ./code/split_snp_annot_by_chr.py ./data/snp_annotation.txt ./output/snp_annot
 ```
 
+- Genotype
+```
+sed 's/Id/varID/g' ./data/geuvadis.snps.txt > ./data/genotype.txt
+```
+>>Split the genitype into individual chromosomes
+```
+python ./code/split_genotype_by_chr.py ./data/genotype.txt ./output/genotype
+```
 ## Preprocess the expression file
 Using your R software load the expression file
 ```
@@ -107,6 +115,7 @@ write.table(expression, file = "./output/residuals_expression.txt", sep = "\t",
 To train the model you need the files you generated from the steps above;
   - gene expression file: `transformed_expression.txt`
   - covariates file: `covariates.txt`
+  - residual file after regressing out covariates: `residuals_expression.txt`
   - gene annotation file: `gene_annot.parsed.txt`
   - snp_annotation file: `snp_annot.chr*.txt` for chr 1-22
   - genotype file: `genotype.chr*.txt` for chr 1-22
@@ -138,7 +147,7 @@ This will take sometime to run and it would be nice to parallelize the step
 ## Make a database
 Make dir for the database
 ```{bash}
-mkdir -p ../dbs
+mkdir -p ./dbs
 ```
 Create database once we have our model summaries we combine them into a single file then create a database
 Using R run this chuck of code below
@@ -152,9 +161,9 @@ n_samples <- tiss_summary$n_samples
   
 for (i in 2:22) {
   model_summaries <- rbind(model_summaries,
-                            read.table('../summary/Model_training_chr'%&%as.character(i) %&% '_model_summaries.txt', header = T, stringsAsFactors = F))
+                            read.table('./summary/Model_training_chr'%&%as.character(i) %&% '_model_summaries.txt', header = T, stringsAsFactors = F))
   tiss_summary <- rbind(tiss_summary,
-                             read.table('../summary/Model_training_chr' %&% as.character(i) %&% '_summary.txt', header = T, stringsAsFactors = F))
+                             read.table('./summary/Model_training_chr' %&% as.character(i) %&% '_summary.txt', header = T, stringsAsFactors = F))
   
 }
   
@@ -166,10 +175,10 @@ dbWriteTable(conn, 'model_summaries', model_summaries, overwrite = TRUE)
 dbExecute(conn, "CREATE INDEX gene_model_summary ON model_summaries (gene)")
 
 # Weights Table -----
-weights <- read.table('../weights/Model_training_chr1_weights.txt', header = T,stringsAsFactors = F)
+weights <- read.table('./weights/Model_training_chr1_weights.txt', header = T,stringsAsFactors = F)
 for (i in 2:22) {
   weights <- rbind(weights,
-              read.table('../weights/Model_training_chr' %&% as.character(i) %&% '_weights.txt', header = T, stringsAsFactors = F))
+              read.table('./weights/Model_training_chr' %&% as.character(i) %&% '_weights.txt', header = T, stringsAsFactors = F))
   
 }
   
