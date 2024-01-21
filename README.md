@@ -18,30 +18,30 @@ Download the files into a directory named `data` and decompress them.
 - Parse the gene annotation file
 Use the script ` parse_gtf.py` to parse the gene annotation file. This script extracts the important columns about the genes into a file that will be used downstream. The extracted columns include _gene name, gene id, start, end, chr and gene type_.
 Run the following command to get the parsed file
-```
+```bash
 python ./code/parse_gtf.py ./data/'gencode.v12.annotation.gtf' ./output/'gene_annot.parsed.txt'
 ```
 - SNP annotation
 First do a quick renaming of the field headers to match the desired column names for downstream processing
-```
+```bash
 sed -e 's/Chr/chromosome/g' -e 's/Ref_b37/ref_vcf/g' -e 's/Alt/alt_vcf/g' ./data/geuvadis.annot.txt > ./data/snp_annotation.txt
 ```
 >>Split the annotation file into individual chromosomes. You will end up with 22 files for each autosome
-```
+```bash
 python ./code/split_snp_annot_by_chr.py ./data/snp_annotation.txt ./output/snp_annot
 ```
 
 - Genotype
-```
+```bash
 sed 's/Id/varID/g' ./data/geuvadis.snps.txt > ./data/genotype.txt
 ```
->>Split the genitype into individual chromosomes
-```
+>>Split the genotype into individual chromosomes
+```bash
 python ./code/split_genotype_by_chr.py ./data/genotype.txt ./output/genotype
 ```
 ## Preprocess the expression file
 Using your R software load the expression file
-```
+```r
 # Load packages
 library(tidyverse)
 library(dplyr)
@@ -50,61 +50,54 @@ library(RSQLite)
 # Load data
 gene_exp = read.table(file = "./data/GD462.GeneQuantRPKM.50FN.samplename.resk10.txt", header = TRUE, sep = "\t" )
 
-##Dropping columns we don't need in the gene expression dataframe
-gene_exp = gene_exp[-c(1, 3, 4)]
+# Dropping columns we don't need in the gene expression dataframe
+gene_exp = gene_exp[,-c(1:4)]
 
-# rename a column
-gene_exp = rename(gene_exp, 'Gene_Name' = Gene_Symbol)
+# Name columns (genes)
+n = gene_exp$Gene_Symbol
+colnames(expr) <- n
 
-# Transpose the data to enable you rub peer factors
-n = gene_exp$Gene_Name
-gene_exp_transpose <- as.data.frame(t(gene_exp[,-1]))
-colnames(gene_exp_transpose) <- n
-
-# write the transposed gene expression. The .csv is for the peer tool
-write.table(gene_exp_transpose, file = './output/gene_exp.csv', sep = ",", col.names = TRUE, row.names = FALSE)
+# Write the transposed gene expression
 write.table(gene_exp_transpose, file = "./output/transformed_expression.txt", sep = "\t",
             row.names = TRUE)
 ```
-- Calculate peer covariates
+### Compute principal components
 
-Generate [PEER factors](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3398141/), these peer factors will be used as covariates to perform multiple 
-linear regression for each gene in our gene expression matrix and then save the residuals from the regression as our new expressions for further analysis where needed.
+Make a simple Principal component analysis, and these will be used as covariates to perform multiple linear regressions for each gene in our gene expression matrix and then save the residuals from the regressions as our new expressions for further analysis where needed. This part was formerly [PEER factors](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC3398141/), but it has been changed to PCs since it's simpler to interpret, faster to compute and in the end have a good performance, as reported in [this paper](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-022-02761-4).
 
-Ensure you have `peer` tool installed on your machine. There is a description of how to download the PEER tool [here](https://github.com/hakyimlab/peer).
+The **PCAForQTL** R library offers two methods to choose the number of PCs to include in the analysis (K): the elbow method and the BE algorithm. According to them "the number of PCs chosen via BE should be considered an upper bound of the reasonable number of PCs to choose in GTEx eQTL data". In this tutorial, the elbow method is used, however, documentation on how to apply the BE algorithm can be found [here](https://github.com/heatherjzhou/PCAForQTL).
 
-Use the PEER tool to generate PEER factors from our transformed gene expression file (`./output/gene_exp.csv`). According to GTEx protocol, If the number of samples is greater than or equal to 350, we use 60 PEER factors. If the number of samples is between 250 and 350, we use 45. Between 150 and 250, we use 30, and less than 150 we use 15. For this study, the number of samples is 463 so we will use 60 PEER factors.
+```r
+library(PCAForQTL)
+# Compute principal components
+prcompResult<-prcomp(expr,center=TRUE,scale.=TRUE)
+PCs<-prcompResult$x # 462 x 462
 
-```
-peertool -f './output/gene_exp.csv' -n 60 --has_header -o ./output/peer_out
-```
-__Note:__ this takes a long time to run the peers
+# Choose K (number of PCs to be used)
+## Elbow method
+resultRunElbow<-PCAForQTL::runElbow(prcompResult=prcompResult) # 29
 
-Once completed read the output of peertool into r to add column names. This will form our covariates matrix
-```
-peer_factors = read.csv(file = "./output/peer_out/X.csv", header = FALSE)
+# Subset PCs, this is the covariates matrix
+PCsTop<-PCs[,1:resultRunElbow]
 
-#Set the column names for the PEER factors (covariates) as the subject IDs
-colnames(peer_factors) = rownames(gene_exp_transpose)
-
-# write out a covariates matrix
-write.table(peer_factors, file = "./output/covariates.txt", sep = "\t",
+# Save covariates (transposed)
+write.table(t(PCsTop), file = "./output/covariates.txt", sep = "\t",
             row.names = TRUE)
 ```
-- Regress out the covariates
+
+### Regress out the covariates
 You may need the residuals for other analysis e.g estimating h2. We are going to regress out the covariates and save the residuals for any other analysis
 
-```
-## Make a copy of the transposed gene expression dataframe so that we can replace the values with the residuals of the multiple linear regressions.
-expression = gene_exp_transpose
+```r
+# Copy of the expression dataframe to replace values with regressed values
+expression = expr
 
-# This loops through all the columns of the transposed gene expression which correspond to each gene,
-for each gene it runs linear regression on the PEER factor covariates. Then it sets the residuals to the new expression for that gene.
+# This loops through all the columns of the transposed gene expression which correspond to each gene, for each gene it runs linear regression on the PCs covariates. Then it sets the residuals to the new expression for that gene.
 
-for (i in 1:length(colnames(gene_exp_transpose))) {
-    fit = lm(gene_exp_transpose[,i] ~ t(as.matrix(peer_factors)))
-    expression[,i] <- fit$residuals
-  }
+for (i in 1:length(colnames(expr))) {
+  fit = lm(expr[,i] ~ as.matrix(PCsTop))
+  expression[,i] <- fit$residuals
+}
 
 # Write out the residual expression file
 write.table(expression, file = "./output/residuals_expression.txt", sep = "\t",
@@ -127,7 +120,7 @@ We will process each chromosmome individually using this rscript `.code/gtex_tis
 Edit the file to fit the paths to the constant files and the ones which will be changed for each chromosome i.e snp_annotation and genotype files.
 
 - Create the required directories
-```
+```bash
 mkdir -p ./summary ./covariances ./weights
 ```
 - Actual training
@@ -136,7 +129,7 @@ Once everything is set you can process a chromosome at a time by executing this 
 `Rscript ./code/gtex_tiss_chrom_training.R 1` to train the model for all genes in chromosome 1
 
 To run all the chromosomes you can use a for loop like this
-```
+```bash
 for i in {1..22}
 do
   Rscript ./code/gtex_tiss_chrom_training.R ${i}
@@ -146,12 +139,12 @@ This will take sometime to run and it would be nice to parallelize the step
 
 ## Make a database
 Make dir for the database
-```{bash}
+```bash
 mkdir -p ./dbs
 ```
 Create database once we have our model summaries we combine them into a single file then create a database
 Using R run this chuck of code below
-```{r}
+```r
 "%&%" <- function(a,b) paste(a,b, sep='')
 driver <- dbDriver('SQLite')
 model_summaries <- read.table('./summary/Model_training_chr1_model_summaries.txt',header = T, stringsAsFactors = F)
@@ -203,7 +196,7 @@ dbDisconnect(conn)
 
 ## Filter the database
 Filter the database to select significant models using R
-```{r}
+```r
 unfiltered_db <- './dbs/gtex_v7_models.db'
 filtered_db <- './dbs/gtex_v7_models_filtered_signif.db'
 driver <- dbDriver("SQLite")
